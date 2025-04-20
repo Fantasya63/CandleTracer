@@ -1,0 +1,15 @@
+Scene: scene_name
+Entities:
+    - Entity: Entity UUID
+
+    TagComponent:
+        Tag: Object anem
+
+    TransformComponent:
+        Translation: [x, y, z]
+        Rotation: [x, y, z]
+        Scale: [x, y, z]
+
+    RTCubeRenderer:
+        Color: [r, g, b]
+        
