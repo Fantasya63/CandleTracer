@@ -39,7 +39,8 @@ def main():
     scene.add_sphere(sphere)
 
     renderer : Renderer = Renderer()
-    result = renderer.Render(scene, film)
+    # result = renderer.Render(scene, film)
+    result = renderer.TestGradient()
 
     plt.imshow(result)
     plt.axis('off')

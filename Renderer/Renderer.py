@@ -8,6 +8,24 @@ import numpy as np
 import math
 
 
+# CUDA kernel for generating gradient
+@cuda.jit
+def generate_gradient(output, width, height):
+    x, y = cuda.grid(2)
+
+    if x >= width or y >= height:
+        return
+   
+    
+    u = x / (width - 1)  # Normalize x to [0,1]
+    v = y / (height - 1)
+
+    # RGB gradient from black (0,0,0) to white (255,255,255)
+    output[y, x, 0] = int(u * 255)  # R
+    output[y, x, 1] = int(v * 255)  # G
+    output[y, x, 2] = int(0 * 255)  # B
+
+
 @cuda.jit(device=True)
 def ray_sphere_intersect(ray_origin, ray_dir, sphere_pos, sphere_radius):
     oc = ray_origin - sphere_pos
@@ -98,7 +116,8 @@ def Trace(outData, viewProj, camPos, spherePos, sphereRadius, numSpheres, width,
 
 class Renderer:
     def __init__(self):
-        pass
+        # Find GPU Specs
+        # Print info
 
     def Render(self, scene : Scene, film : Film):
         
@@ -130,3 +149,21 @@ class Renderer:
 
         scene.camera.film.pixels = cudaOutData.copy_to_host()
         return scene.camera.film.pixels
+
+    def TestGradient(self):
+         # Allocate output array on host and device
+        output_host = np.zeros((height, width, 3), dtype=np.uint8)
+        output_device = cuda.to_device(output_host)
+
+        # Set up grid and block dimensions
+        block_size = (16, 16)
+        grid_size = ((width + block_size[0] - 1) // block_size[0],
+                    (height + block_size[1] - 1) // block_size[1])
+
+        # Launch kernel
+        generate_gradient[grid_size, block_size](output_device, width, height)
+
+        # Copy result back to host and save as image
+        output_host = output_device.copy_to_host()
+        image = Image.fromarray(output_host)
+        image.save('gradient.png')
